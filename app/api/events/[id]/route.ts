@@ -85,12 +85,18 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
   // Check URL params to see if they want a hard delete or soft cancel
   const url = new URL(req.url)
   const action = url.searchParams.get('action')
+  const isPast = new Date(currentEvent.date).getTime() < Date.now()
 
   if (action === 'hard') {
-    // HARD DELETE: Only allowed if no one is registered
+    // HARD DELETE: Only allowed if no one is registered and not in the past
     if (currentEvent.confirmed_count > 0 || currentEvent.waitlisted_count > 0) {
       return NextResponse.json({ 
-        error: 'Cannot delete an event with active registrations. Please cancel it instead.' 
+        error: 'Cannot delete an event with active registrations. Please cancel it instead to preserve registration records.' 
+      }, { status: 400 })
+    }
+    if (isPast) {
+      return NextResponse.json({ 
+        error: 'Cannot delete a past event. Past events are preserved as historical records.' 
       }, { status: 400 })
     }
     
@@ -99,7 +105,17 @@ export async function DELETE(req: Request, { params }: { params: { id: string } 
     return NextResponse.json({ success: true, message: 'Event permanently deleted' })
   }
 
-  // SOFT CANCEL (Default): Allowed anytime
+  // SOFT CANCEL: Only allowed for upcoming, non-cancelled events
+  if (isPast) {
+    return NextResponse.json({ 
+      error: 'Cannot cancel an event that has already occurred. Past events cannot be cancelled.' 
+    }, { status: 400 })
+  }
+
+  if (currentEvent.status === 'cancelled') {
+    return NextResponse.json({ error: 'Event is already cancelled.' }, { status: 400 })
+  }
+
   const { error } = await supabase
     .from('events')
     .update({ status: 'cancelled' })

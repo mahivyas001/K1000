@@ -15,7 +15,7 @@ export async function GET(req: Request, { params }: { params: { id: string } }) 
   // Fetch registrations with student details
   const { data, error } = await supabase
     .from('registrations')
-    .select('id, status, created_at, users(name, email)')
+    .select('id, student_id, status, created_at, users(name, email)')
     .eq('event_id', params.id)
     .order('created_at', { ascending: true })
 

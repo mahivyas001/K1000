@@ -1,4 +1,4 @@
-type Status = 'open' | 'full' | 'past' | 'cancelled' | 'waitlisted'
+export type Status = 'open' | 'full' | 'past' | 'cancelled' | 'waitlisted' | 'attended'
 
 const COPY: Record<Status, string> = {
   open: 'Confirmed',
@@ -6,6 +6,7 @@ const COPY: Record<Status, string> = {
   past: 'Past',
   cancelled: 'Cancelled',
   waitlisted: 'Waitlisted',
+  attended: 'Attended',
 }
 
 const COLORS: Record<Status, { bg: string; fg: string }> = {
@@ -14,10 +15,12 @@ const COLORS: Record<Status, { bg: string; fg: string }> = {
   past: { bg: 'var(--slate-bg)', fg: 'var(--ink-soft)' },
   cancelled: { bg: 'var(--rust-bg)', fg: 'var(--rust)' },
   waitlisted: { bg: '#fbecd2', fg: 'var(--amber-ink)' },
+  attended: { bg: 'var(--slate-bg)', fg: 'var(--ink)' },
 }
 
-export default function StatusBadge({ status }: { status: Status }) {
-  const { bg, fg } = COLORS[status]
+export default function StatusBadge({ status }: { status: Status | string }) {
+  const s = (status in COLORS ? status : 'past') as Status
+  const { bg, fg } = COLORS[s]
   return (
     <span
       style={{
@@ -32,7 +35,7 @@ export default function StatusBadge({ status }: { status: Status }) {
         whiteSpace: 'nowrap',
       }}
     >
-      {COPY[status]}
+      {COPY[s] || status}
     </span>
   )
 }

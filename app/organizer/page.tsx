@@ -96,13 +96,13 @@ export default function OrganizerPage() {
   }
 
   const handleCancel = async (id: string) => {
-    if (!confirm('Cancel this event? It will be hidden from students but kept in your history.')) return
+    if (!confirm('Cancel this upcoming event? It will be hidden from students, and all active registrations will be cancelled while preserving the audit record.')) return
     const res = await fetch(`/api/events/${id}`, {
       method: 'DELETE',
       headers: { 'x-user-id': currentUser.id }
     })
+    const data = await res.json()
     if (!res.ok) {
-      const data = await res.json()
       alert(data.error)
       return
     }
@@ -110,7 +110,7 @@ export default function OrganizerPage() {
   }
 
   const handleHardDelete = async (id: string) => {
-    if (!confirm('PERMANENTLY delete this event? This cannot be undone.')) return
+    if (!confirm('PERMANENTLY delete this event? This is only allowed for events with 0 registrations and cannot be undone.')) return
     const res = await fetch(`/api/events/${id}?action=hard`, {
       method: 'DELETE',
       headers: { 'x-user-id': currentUser.id }
@@ -130,18 +130,24 @@ export default function OrganizerPage() {
     }
     setLoadingAttendees(true)
     setShowAttendeesId(eventId)
-    const res = await fetch(`/api/events/${eventId}/registrations`, {
-      headers: { 'x-user-id': currentUser.id }
-    })
-    const data = await res.json()
-    setAttendees(data.attendees || [])
-    setLoadingAttendees(false)
+    try {
+      const res = await fetch(`/api/events/${eventId}/registrations`, {
+        headers: { 'x-user-id': currentUser.id }
+      })
+      const data = await res.json()
+      setAttendees(data.attendees || [])
+    } catch (err) {
+      console.error('Failed to fetch attendees:', err)
+      setAttendees([])
+    } finally {
+      setLoadingAttendees(false)
+    }
   }
 
   return (
     <section className="shell" style={{ padding: '40px 0 64px' }}>
       {/* Header */}
-      <div style={{ marginBottom: 32, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
+      <div style={{ marginBottom: 28, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: 16 }}>
         <div>
           <span className="eyebrow-tag">organizer console</span>
           <h1 style={{ fontSize: 30, marginTop: 10 }}>Manage your events</h1>
@@ -150,7 +156,7 @@ export default function OrganizerPage() {
       </div>
 
       {/* Analytics Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 32 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 16, marginBottom: 24 }}>
         <div className="card-surface" style={{ padding: 20 }}>
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Events</div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700 }}>{totalEvents}</div>
@@ -159,6 +165,15 @@ export default function OrganizerPage() {
           <div style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Registrations</div>
           <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 700 }}>{totalRegistrations}</div>
         </div>
+      </div>
+
+      {/* Policy & Lifecycle Reasoning Banner */}
+      <div className="card-surface" style={{ padding: '14px 18px', marginBottom: 24, fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.6, background: 'var(--paper-raised)', borderLeft: '3px solid var(--amber)' }}>
+        <div style={{ fontWeight: 600, color: 'var(--ink)', marginBottom: 2 }}>Event Lifecycle Rules:</div>
+        <div>• <strong>Edit:</strong> Allowed only for upcoming events before start time. Locked once the event has passed.</div>
+        <div>• <strong>Cancel (Soft):</strong> Allowed for upcoming events. Cancels active student registrations and hides the event, preserving historical records.</div>
+        <div>• <strong>Delete (Hard):</strong> Permitted ONLY when 0 students ever registered. If students signed up, deletion is blocked to prevent data loss.</div>
+        <div>• <strong>Past Events:</strong> Completed and locked to protect historical attendance records.</div>
       </div>
 
       {/* Event List */}
@@ -201,10 +216,10 @@ export default function OrganizerPage() {
                       style={{ padding: '6px 12px', fontSize: 13 }}
                       onClick={() => toggleAttendees(event.id)}
                     >
-                      {showAttendeesId === event.id ? 'Hide' : 'Attendees'}
+                      {showAttendeesId === event.id ? 'Hide Attendees' : 'View Attendees'}
                     </button>
 
-                    {/* Edit: locked for past/cancelled events */}
+                    {/* Edit: locked for past or cancelled events */}
                     {event.status !== 'cancelled' && !isPast && (
                       <button
                         className="btn btn-secondary"
@@ -215,24 +230,48 @@ export default function OrganizerPage() {
                       </button>
                     )}
 
-                    {event.status !== 'cancelled' && (
+                    {/* Cancel: allowed ONLY for upcoming, non-cancelled events */}
+                    {event.status !== 'cancelled' && !isPast && (
                       <button
                         className="btn btn-secondary"
                         style={{ padding: '6px 12px', fontSize: 13, color: 'var(--amber-ink)', borderColor: 'var(--amber-ink)' }}
                         onClick={() => handleCancel(event.id)}
+                        title="Cancel this event and notify students"
                       >
                         Cancel
                       </button>
                     )}
 
-                    {event.confirmed_count === 0 && event.waitlisted_count === 0 && (
+                    {/* Hard Delete: Only allowed if 0 registrations and not a past event */}
+                    {event.confirmed_count === 0 && event.waitlisted_count === 0 && !isPast && (
                       <button
                         className="btn btn-secondary"
                         style={{ padding: '6px 12px', fontSize: 13, color: 'var(--rust)', borderColor: 'var(--rust)' }}
                         onClick={() => handleHardDelete(event.id)}
+                        title="Permanently remove event (allowed only for 0 registrations)"
                       >
                         Delete
                       </button>
+                    )}
+
+                    {/* Past event tag */}
+                    {isPast && (
+                      <span
+                        style={{ fontSize: 12, color: 'var(--ink-soft)', fontFamily: 'var(--font-mono)', padding: '4px 8px', background: 'var(--slate-bg)', borderRadius: 'var(--radius)' }}
+                        title="Past events are preserved as historical records. Cannot be edited, cancelled, or deleted."
+                      >
+                        Historical Record
+                      </span>
+                    )}
+
+                    {/* Cancelled tag */}
+                    {event.status === 'cancelled' && (
+                      <span
+                        style={{ fontSize: 12, color: 'var(--rust)', fontFamily: 'var(--font-mono)', padding: '4px 8px', background: 'var(--rust-bg)', borderRadius: 'var(--radius)' }}
+                        title="This event has been cancelled."
+                      >
+                        Cancelled
+                      </span>
                     )}
                   </div>
                 </div>
@@ -240,29 +279,56 @@ export default function OrganizerPage() {
                 {/* Expandable Attendees Drawer */}
                 {showAttendeesId === event.id && (
                   <div style={{ padding: '16px 24px', borderTop: '1.5px solid var(--line)', background: 'var(--paper)' }}>
-                    <h4 style={{ fontSize: 12, fontWeight: 600, marginBottom: 12, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                      Registered Students ({attendees.filter(a => a.status === 'confirmed').length})
-                      {attendees.filter(a => a.status === 'waitlisted').length > 0 && (
-                        <span style={{ marginLeft: 8, color: 'var(--amber-ink)' }}>
-                          · {attendees.filter(a => a.status === 'waitlisted').length} waitlisted
-                        </span>
-                      )}
-                    </h4>
+                    {(() => {
+                      const confirmed = attendees.filter(a => a.status === 'confirmed').length
+                      const waitlisted = attendees.filter(a => a.status === 'waitlisted').length
+                      const attended = attendees.filter(a => a.status === 'attended').length
+                      const cancelled = attendees.filter(a => a.status === 'cancelled').length
+
+                      return (
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, flexWrap: 'wrap', gap: 8 }}>
+                          <h4 style={{ fontSize: 12, fontWeight: 600, color: 'var(--ink-soft)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>
+                            Student Registrations ({attendees.length} total)
+                          </h4>
+                          <div style={{ display: 'flex', gap: 10, fontSize: 12, fontFamily: 'var(--font-mono)' }}>
+                            {confirmed > 0 && <span style={{ color: 'var(--green)' }}>● {confirmed} confirmed</span>}
+                            {waitlisted > 0 && <span style={{ color: 'var(--amber-ink)' }}>● {waitlisted} waitlisted</span>}
+                            {attended > 0 && <span style={{ color: 'var(--ink)' }}>● {attended} attended</span>}
+                            {cancelled > 0 && <span style={{ color: 'var(--rust)' }}>● {cancelled} cancelled</span>}
+                          </div>
+                        </div>
+                      )
+                    })()}
+
                     {loadingAttendees ? (
-                      <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Loading...</p>
+                      <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>Loading attendees...</p>
                     ) : attendees.length === 0 ? (
-                      <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>No registrations yet.</p>
+                      <p style={{ fontSize: 13, color: 'var(--ink-soft)' }}>No registrations recorded for this event yet.</p>
                     ) : (
-                      <ul style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: 8 }}>
-                        {attendees.map(a => (
-                          <li key={a.id} className="card-surface" style={{ padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--paper-raised)' }}>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 500 }}>{a.users?.name || 'Unknown'}</div>
-                              <div style={{ fontSize: 11, color: 'var(--ink-soft)' }}>{a.users?.email || ''}</div>
-                            </div>
-                            <StatusBadge status={a.status === 'confirmed' ? 'open' : a.status === 'waitlisted' ? 'waitlisted' : 'cancelled'} />
-                          </li>
-                        ))}
+                      <ul style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
+                        {attendees.map(a => {
+                          const badgeStatus =
+                            a.status === 'confirmed' ? 'open' :
+                            a.status === 'attended' ? 'attended' :
+                            a.status === 'waitlisted' ? 'waitlisted' :
+                            'cancelled'
+
+                          return (
+                            <li key={a.id} className="card-surface" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8, background: 'var(--paper-raised)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
+                                <div>
+                                  <div style={{ fontSize: 13.5, fontWeight: 600 }}>{a.users?.name || 'Unknown Student'}</div>
+                                  <div style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{a.users?.email || 'No email'}</div>
+                                </div>
+                                <StatusBadge status={badgeStatus} />
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 11, color: 'var(--ink-soft)', borderTop: '1px solid var(--line)', paddingTop: 6 }}>
+                                <span style={{ fontFamily: 'var(--font-mono)' }}>ID: {a.student_id || a.id}</span>
+                                <span>{new Date(a.created_at).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}</span>
+                              </div>
+                            </li>
+                          )
+                        })}
                       </ul>
                     )}
                   </div>

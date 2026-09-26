@@ -14,3 +14,4 @@ apply_dynamic_seed.js
 apply_trigger.js
 apply_overbooking.js
 run_schema.js
+apply_demo_seed.js
