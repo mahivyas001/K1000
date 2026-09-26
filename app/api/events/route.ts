@@ -22,6 +22,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'Capacity cannot exceed 10,000.' }, { status: 400 })
   }
 
+  // VALIDATION: Past date check
+  if (new Date(body.date).getTime() < Date.now()) {
+    return NextResponse.json({ error: 'Event date cannot be in the past.' }, { status: 400 })
+  }
+
   // 3. Force the organizer_id to be the authenticated user (prevents spoofing)
   const { data, error } = await supabase.from('events').insert({
     id: `evt-${Date.now()}`,

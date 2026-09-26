@@ -99,7 +99,7 @@ export default function OrganizerPage() {
           {formError && <div style={{ color: 'var(--rust)', marginBottom: 12, fontSize: 14 }}>{formError}</div>}
           <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
             <input name="name" defaultValue={editingEvent?.name} placeholder="Event Name" required style={{ padding: 10, border: '1.5px solid var(--line)', borderRadius: 'var(--radius)' }} />
-            <input name="date" type="datetime-local" defaultValue={editingEvent?.date.slice(0, 16)} required style={{ padding: 10, border: '1.5px solid var(--line)', borderRadius: 'var(--radius)' }} />
+            <input name="date" type="datetime-local" defaultValue={editingEvent?.date.slice(0, 16)} min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)} required style={{ padding: 10, border: '1.5px solid var(--line)', borderRadius: 'var(--radius)' }} />
             <input name="venue" defaultValue={editingEvent?.venue} placeholder="Venue" required style={{ padding: 10, border: '1.5px solid var(--line)', borderRadius: 'var(--radius)' }} />
             <input name="capacity" type="number" defaultValue={editingEvent?.capacity} placeholder="Capacity" required min="1" style={{ padding: 10, border: '1.5px solid var(--line)', borderRadius: 'var(--radius)' }} />
             <select name="category" defaultValue={editingEvent?.category} style={{ padding: 10, border: '1.5px solid var(--line)', borderRadius: 'var(--radius)' }}>{CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}</select>
