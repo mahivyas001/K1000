@@ -167,15 +167,6 @@ export default function OrganizerPage() {
         </div>
       </div>
 
-      {/* Policy & Lifecycle Reasoning Banner */}
-      <div className="card-surface" style={{ padding: '14px 18px', marginBottom: 24, fontSize: 13, color: 'var(--ink-soft)', lineHeight: 1.6, background: 'var(--paper-raised)', borderLeft: '3px solid var(--amber)' }}>
-        <div style={{ fontWeight: 600, color: 'var(--ink)', marginBottom: 2 }}>Event Lifecycle Rules:</div>
-        <div>• <strong>Edit:</strong> Allowed only for upcoming events before start time. Locked once the event has passed.</div>
-        <div>• <strong>Cancel (Soft):</strong> Allowed for upcoming events. Cancels active student registrations and hides the event, preserving historical records.</div>
-        <div>• <strong>Delete (Hard):</strong> Permitted ONLY when 0 students ever registered. If students signed up, deletion is blocked to prevent data loss.</div>
-        <div>• <strong>Past Events:</strong> Completed and locked to protect historical attendance records.</div>
-      </div>
-
       {/* Event List */}
       {events.length === 0 ? (
         <EmptyState
