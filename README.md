@@ -233,3 +233,4 @@ The app already loads its fonts through Next.js's built-in font optimization rat
 - Directly download zip file:
   
   https://drive.google.com/file/d/1apMUhus-qXZbmAM-AKIRptr5H07NE2jr/view?usp=sharing
+# K1000
