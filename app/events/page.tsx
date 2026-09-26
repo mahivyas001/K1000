@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useMemo } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { getEvents, searchEventsByName, filterEventsByCategory, isPastEvent, EventCategory } from '@/data/events'
 import EventCard from '@/components/EventCard'
 import EmptyState from '@/components/EmptyState'
@@ -8,9 +9,12 @@ import { DbEvent } from '@/types/database'
 const CATEGORIES: (EventCategory | 'All')[] = ['All', 'Tech', 'Cultural', 'Sports', 'Workshop', 'Career', 'Music']
 
 export default function EventsPage() {
+  const searchParams = useSearchParams()
   const [events, setEvents] = useState<DbEvent[]>([])
   const [query, setQuery] = useState('')
-  const [category, setCategory] = useState<EventCategory | 'All'>('All')
+  const [category, setCategory] = useState<EventCategory | 'All'>(
+    (searchParams.get('category') as EventCategory) || 'All'
+  )
   const [sortBy, setSortBy] = useState<'date' | 'popularity'>('date')
 
   useEffect(() => { getEvents().then(setEvents) }, [])
