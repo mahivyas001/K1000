@@ -6,3 +6,11 @@ out/
 *.log
 .DS_Store
 coverage/
+tsconfig.tsbuildinfo
+temp_stmt.sql
+apply_schema.js
+apply_seed.js
+apply_dynamic_seed.js
+apply_trigger.js
+apply_overbooking.js
+run_schema.js

@@ -1,10 +1,11 @@
-type Status = 'open' | 'full' | 'past' | 'cancelled'
+type Status = 'open' | 'full' | 'past' | 'cancelled' | 'waitlisted'
 
 const COPY: Record<Status, string> = {
-  open: 'Open',
+  open: 'Confirmed',
   full: 'Full',
   past: 'Past',
   cancelled: 'Cancelled',
+  waitlisted: 'Waitlisted',
 }
 
 const COLORS: Record<Status, { bg: string; fg: string }> = {
@@ -12,6 +13,7 @@ const COLORS: Record<Status, { bg: string; fg: string }> = {
   full: { bg: 'var(--rust-bg)', fg: 'var(--rust)' },
   past: { bg: 'var(--slate-bg)', fg: 'var(--ink-soft)' },
   cancelled: { bg: 'var(--rust-bg)', fg: 'var(--rust)' },
+  waitlisted: { bg: '#fbecd2', fg: 'var(--amber-ink)' },
 }
 
 export default function StatusBadge({ status }: { status: Status }) {

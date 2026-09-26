@@ -1,10 +1,23 @@
 import { describe, it, expect } from 'vitest'
-import { events, isPastEvent } from '@/data/events'
+import { isPastEvent, events } from '@/data/events'
 
 describe('isPastEvent', () => {
   it('marks an event with a date before TODAY as past', () => {
-    // evt-10 is dated 2026-09-01; TODAY (seeded) is 2026-09-16
-    const pastEvent = events.find((e) => e.id === 'evt-10')!
+    // Create a mock event that is definitely in the past
+    const pastEvent = { 
+      ...events[0], 
+      date: '2020-01-01T10:00:00Z' // Hardcode a past date
+    }
+    
     expect(isPastEvent(pastEvent)).toBe(true)
+  })
+
+  it('marks an event with a future date as not past', () => {
+    const futureEvent = {
+      ...events[0],
+      date: '2099-01-01T10:00:00Z' // Hardcode a future date
+    }
+    
+    expect(isPastEvent(futureEvent)).toBe(false)
   })
 })

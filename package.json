@@ -9,6 +9,11 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@babel/runtime": "^8.0.5",
+    "@next/swc-wasm-nodejs": "^16.3.6",
+    "@next/swc-win32-x64-msvc": "^16.3.6",
+    "@supabase/ssr": "^0.12.7",
+    "@supabase/supabase-js": "^2.117.2",
     "next": "14.2.5",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
@@ -17,6 +22,7 @@
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "babel-preset-next": "^1.4.0",
     "typescript": "^5.5.3",
     "vitest": "^1.6.0"
   }

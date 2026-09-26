@@ -1,5 +1,6 @@
 import Link from 'next/link'
-import { CampusEvent, isPastEvent, isFullEvent } from '@/data/events'
+import { isPastEvent, isFullEvent } from '@/data/events'
+import { DbEvent } from '@/types/database'
 import StatusBadge from './StatusBadge'
 
 function formatDate(iso: string) {
@@ -10,10 +11,10 @@ function formatDate(iso: string) {
   })
 }
 
-export default function EventCard({ event }: { event: CampusEvent }) {
+export default function EventCard({ event }: { event: DbEvent }) {
   const past = isPastEvent(event)
-  const full = isFullEvent(event)
-  const status = event.cancelled
+  const full = event.is_full || isFullEvent(event)
+  const status = event.status === 'cancelled'
     ? 'cancelled'
     : past
       ? 'past'
@@ -35,7 +36,7 @@ export default function EventCard({ event }: { event: CampusEvent }) {
       <div className="event-card__stub">
         <StatusBadge status={status} />
         <span className="event-card__seats">
-          {event.seatsAvailable}/{event.capacity} seats
+          {event.available_seats}/{event.capacity} seats
         </span>
       </div>
     </Link>
