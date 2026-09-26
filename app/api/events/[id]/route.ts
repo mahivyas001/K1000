@@ -46,10 +46,18 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
     return NextResponse.json({ error: 'Capacity cannot exceed 10,000.' }, { status: 400 })
   }
 
-  // Perform Update
+  // Perform Update — only pass known DB columns (snake_case) to avoid schema errors
+  const updatePayload: Record<string, any> = {}
+  if (body.name       !== undefined) updatePayload.name        = body.name
+  if (body.date       !== undefined) updatePayload.date        = body.date
+  if (body.venue      !== undefined) updatePayload.venue       = body.venue
+  if (body.category   !== undefined) updatePayload.category    = body.category
+  if (body.description !== undefined) updatePayload.description = body.description
+  if (body.capacity   !== undefined) updatePayload.capacity    = newCapacity
+
   const { data, error } = await supabase
     .from('events')
-    .update(body)
+    .update(updatePayload)
     .eq('id', params.id)
     .select()
     .single()
